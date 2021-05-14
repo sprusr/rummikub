@@ -1,0 +1,9 @@
+[package]
+name = "rummikub"
+version = "0.1.0"
+authors = ["sprusr <scott@spru.sr>"]
+edition = "2018"
+
+[dependencies]
+bevy = "0.5"
+rand = "0.8.0"
