@@ -1,14 +1,14 @@
 use std::collections::{BTreeSet, HashSet};
 
-use bevy::prelude::*;
+use bevy::{prelude::*, text::Text2dSize};
+
+pub(super) struct UiFont(pub(super) Handle<Font>);
 
 pub(super) struct Materials {
     pub(super) tile_material: Handle<ColorMaterial>,
 }
 
 pub(super) struct Tile;
-
-pub(super) struct TileNumber(pub(super) u8);
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub(super) enum TileColor {
@@ -30,7 +30,126 @@ impl TileColor {
     }
 }
 
+#[derive(Clone, Copy)]
+pub(super) struct TileNumber(pub(super) u8);
+
+#[derive(Bundle)]
+pub(super) struct TileBundle {
+    tile: Tile,
+    color: TileColor,
+    number: TileNumber,
+    #[bundle]
+    sprite: SpriteBundle,
+    text: Text,
+    text_size: Text2dSize,
+}
+
+impl TileBundle {
+    pub(super) fn new(
+        color: TileColor,
+        number: TileNumber,
+        materials: &Res<Materials>,
+        font: &Res<UiFont>,
+    ) -> Self {
+        TileBundle {
+            tile: Tile {},
+            color,
+            number,
+            sprite: SpriteBundle {
+                material: materials.tile_material.clone(),
+                sprite: Sprite::new(Vec2::new(50.0, 50.0)),
+                transform: Transform {
+                    translation: Vec3::new(10.0, 10.0, 0.0),
+                    ..Default::default()
+                },
+                visible: Visible {
+                    is_visible: false,
+                    is_transparent: false,
+                },
+                ..Default::default()
+            },
+            text: Text::with_section(
+                number.0.to_string(),
+                TextStyle {
+                    color: match color {
+                        TileColor::Black => Color::BLACK,
+                        TileColor::Blue => Color::BLUE,
+                        TileColor::Red => Color::RED,
+                        TileColor::Yellow => Color::YELLOW,
+                    },
+                    font_size: 24.0,
+                    font: font.0.clone(),
+                },
+                TextAlignment {
+                    vertical: VerticalAlign::Center,
+                    horizontal: HorizontalAlign::Center,
+                },
+            ),
+            text_size: Text2dSize {
+                size: Size {
+                    width: 2.0,
+                    height: 2.0,
+                },
+            },
+        }
+    }
+}
+
 pub(super) struct TileJoker;
+
+#[derive(Bundle)]
+pub(super) struct TileJokerBundle {
+    tile: Tile,
+    color: TileColor,
+    joker: TileJoker,
+    #[bundle]
+    sprite: SpriteBundle,
+    text: Text,
+    text_size: Text2dSize,
+}
+
+impl TileJokerBundle {
+    pub(super) fn new(color: TileColor, materials: &Res<Materials>, font: &Res<UiFont>) -> Self {
+        TileJokerBundle {
+            tile: Tile {},
+            color,
+            joker: TileJoker {},
+            sprite: SpriteBundle {
+                material: materials.tile_material.clone(),
+                sprite: Sprite::new(Vec2::new(50.0, 50.0)),
+                transform: Transform {
+                    translation: Vec3::new(10.0, 10.0, 0.0),
+                    ..Default::default()
+                },
+                visible: Visible {
+                    is_visible: false,
+                    is_transparent: false,
+                },
+                ..Default::default()
+            },
+            text: Text::with_section(
+                "J".to_string(),
+                TextStyle {
+                    color: match color {
+                        TileColor::Black => Color::BLACK,
+                        TileColor::Blue => Color::BLUE,
+                        TileColor::Red => Color::RED,
+                        TileColor::Yellow => Color::YELLOW,
+                    },
+                    font_size: 24.0,
+                    font: font.0.clone(),
+                },
+                TextAlignment {
+                    vertical: VerticalAlign::Center,
+                    horizontal: HorizontalAlign::Center,
+                },
+            ),
+            text_size: Text2dSize::default(),
+        }
+    }
+}
+
+pub(super) struct TileInHand;
 
 pub(super) struct PlayerHand(pub(super) Vec<Entity>);
 
@@ -84,7 +203,10 @@ impl TileSet {
         return false;
     }
 
-    pub(super) fn fmt(&self, query: &Query<(&TileColor, &TileNumber, &TileJoker), With<Tile>>) -> String {
+    pub(super) fn fmt(
+        &self,
+        query: &Query<(&TileColor, &TileNumber, &TileJoker), With<Tile>>,
+    ) -> String {
         self.0
             .iter()
             .enumerate()
